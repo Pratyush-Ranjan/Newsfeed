@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html ng-app="news">
+<head>
+	<title>NEWs POST</title>
+	<link rel="stylesheet" type="text/css" href="./public/stylesheets/bootstrap.min.css">
+	<script type="text/javascript" src="./public/javascripts/angular.min.js"></script>
+	<script type="text/javascript" src="./public/javascripts/angular-route.min.js"></script>
+	<script type="text/javascript" src="./public/javascripts/underscore-min.js"></script>
+<script type="text/javascript" src="./public/javascripts/angularapp.js"></script>
+<style>
+  @media screen and (max-width: 1100px)
+  {
+    .v1
+    {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body ng-controller="newscontrol">
+<div class="row">
+    <div class="col-xs-8 col-xs-offset-2">
+      <br>
+      <% if (locals.usernew) { %>
+  <ul class="nav nav-pills" style="float: right;" ng-show="sign()">
+     <li><a style="color: lightblue;" href="#/post" ><h3> Dashboard </h3></a></li>
+     <li><a style="color: lightblue;" href="" ng-click="logout()" ><h3> LogOut </h3></a></li>
+   </ul>
+<% } else { %>
+  <h1>Boohiss no myVar!</h1>
+<% } %></h1>
+     <h1 style="color: grey; ">Global BABA News {{ userData.email }} </h1>
+     <% if(locals.error_msg){ %>
+<h1> yes</h1>
+<% } else{ %>
+<h1> no <%= locals.error_msg %> </h1>
+<% } %>
+     <hr>
+      <div class="ng-view"></div>
+    </div>
+  </div>
+</body>
+</html>
