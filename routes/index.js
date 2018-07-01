@@ -1,13 +1,19 @@
 var express = require('express');
+var mongoose = require('mongoose')
 var router = express.Router();
 var passport =require('passport');
 var LocalStrategy =require('passport-local').Strategy
+var jwt = require('express-jwt');
 var New= require('../models/new');
-var User= require('../models/user');
+var User=require('../models/user');
 
-router.use(passport.initialize());
+var auth = jwt({secret: 'SECRET', userProperty: 'payload'});
 
-router.use(passport.session());
+/* GET home page. */
+router.get('/', function(req, res, next) {
+res.render('index', { title: 'Global Baba News' });
+});
+
 
 router.get('/api/news', function(req, res, next) {
   New.find(function(err,docs){
@@ -16,69 +22,6 @@ router.get('/api/news', function(req, res, next) {
 	else
 		res.json(docs);
 	});
-});
-
-router.post('/api/adduser', function(req, res, next) {
-  var usernew= new User({
-    uname: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  });
-  User.createuser(usernew,function(err,user){
-    if(err) res.send(err);
-  });
-  console.log('chal');
-  res.redirect('http://localhost:3000/#/post');
-  console.log('na');
-});
-
-passport.serializeUser(function(user,done){
-   done(null,user.id); 
-});
-passport.deserializeUser(function(id,done){
-    User.getUserById(id,function(err,user){
-        done(err,user);
-    });
-    
-});
-
-passport.use(new LocalStrategy(function(username,password,done){
-    console.log("here"+username+password);
-    User.findOne({ email: username },function(err,user){
-        if(err) console.log(err);
-        if(!user){
-            console.log('Unknown User');
-            return done(null,false,{error_msg:'Unknown User'});
-        }
-        User.comparePassword(password,user.password,function(err,isMatch){
-            console.log(user.password);
-            if(err) console.log(err);
-            if(isMatch){
-              console.log('success' + user);
-                return done(null,user);
-            }else{
-                console.log('invalid Password');
-                return done(null,false,{error_msg:'Invalid Password'});
-            }
-        });
-    });
-}));
-
-router.post('/api/login', passport.authenticate('local') ,function(req, res,next) {
-  console.log('aao raja'+ req.user.email);
-  usernew=req.user;
-  var usernew= new User({
-    uname: req.user.username,
-    email: req.user.email,
-    password: req.user.password
-  });
-  console.log(usernew);
-  res.send(usernew);
-    });
-
-router.get('/api/logout', function(req,res){
-    req.logout();
-    res.redirect('http://localhost:3000/#/');
 });
 
 router.post('/api/addnews', function(req, res, next) {
@@ -146,10 +89,56 @@ router.get('/api/news/:id', function(req, res, next) {
 		res.json(docs);
 	});
 });
+ 
+router.get('/register/check', function(req, res, next) {
+  User.findOne({ username: req.body.rusername }, function (err, user) {
+      if (err)
+    res.send(err);
+  else
+    res.json(user);
+    });
+ });
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-res.render('index', { title: 'Global Baba News' });
+router.post('/register', function(req, res, next){
+  
+  var user = new User();
+  user.username=req.body.rusername;
+
+  user.setPassword(req.body.rpassword)
+  
+  user.save(function (err){
+    if(err){ return next(err); }
+    return res.json({token: user.generateJWT()})
+  });
+});
+
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    User.findOne({ username: username }, function (err, user) {
+      if (err) { return done(err); }
+      if (!user) {
+        return done(null, false, { err_message: 'Incorrect username.' });
+      }
+      if (!user.validPassword(password)) {
+        return done(null, false, { err_message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    });
+  }
+));
+
+router.post('/login', function(req, res, next){
+console.log('calling passport)');
+  passport.authenticate('local', function(err, user, info){
+    if(err){ return next(err); }
+
+    if(user){
+      return res.json({token: user.generateJWT()});
+    } else {
+      return res.status(401).json(info);
+    }
+  })(req, res, next);
 });
 
 module.exports = router;

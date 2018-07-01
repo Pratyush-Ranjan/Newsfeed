@@ -1,21 +1,21 @@
 <div class=" jumbotron col-md-6">
 <h3 style=" text-align: center;"> LOG IN </h3>
 <br>
-<form class="form-horizontal" name="iform">
-    <div class="alert alert-danger" role="alert" ng-show="iform.$dirty && !iform.$valid">
-      <span class="glyphicon glyphicon-exclamation-sign"></span>
-          Enter a valid credentials!
-    </div>
+<form class="form-horizontal" ng-submit="logIn()">
+<div ng-show='error' class='alert alert-danger' role="alert">
+<span class="glyphicon glyphicon-exclamation-sign"></span>
+            {{ error.err_message }}
+            </div>
   <div class="form-group">
-    <label class="col-sm-2 control-label">Email</label>
+    <label class="col-sm-2 control-label">Username</label>
     <div class="col-sm-10">
-      <input type="email" class="form-control" ng-model="useremail" placeholder="Email" required>
+      <input type="text" class="form-control" ng-model="user.username" placeholder="Email" required>
     </div>
   </div>
   <div class="form-group">
     <label class="col-sm-2 control-label">Password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" ng-model="password" placeholder="Password" required>
+      <input type="password" class="form-control" ng-model="user.password" placeholder="Password" required>
     </div>
   </div>
   <div class="form-group">
@@ -27,26 +27,26 @@
       </div>
     </div>
   </div>
-   <br><br><p><br></p><p><br></p>
+   <br><br><br><br>
   <div class="form-group" style=" text-align: center;">
     <div class="col-sm-12 ">
-      <button type="submit" class="btn btn-primary" ng-click="signin()">Sign In</button>
+      <button type="submit" class="btn btn-primary">Sign In</button>
     </div>
   </div>
 </form>
 </div>
 <div class="v1" style="
     border-left: 3px dotted grey;
-    height: 490px;
+    height: 440px;
     position: absolute;
     left: 50%;
     margin-left: -3px;
-    top: 120px;
+    top: 100px;
 "></div>
 <div class=" jumbotron col-md-6">
 <h3 style=" text-align: center;"> REGISTER </h3>
 <br>
-<form class="form-horizontal" name="soform" ng-submit="singup()" >
+<form class="form-horizontal" ng-submit="register()" >
 <div class="alert alert-danger" role="alert" ng-show="er">
       <span class="glyphicon glyphicon-exclamation-sign"></span>
          {{ er }}
@@ -54,25 +54,19 @@
     <div class="form-group">
     <label class="col-sm-2 control-label">Username</label>
     <div class="col-sm-10">
-      <input type="text" class="form-control" ng-model="usersname" placeholder="Name" required>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Email</label>
-    <div class="col-sm-10">
-      <input type="email" class="form-control" ng-model="usersemail" placeholder="Email" required>
+      <input type="text" class="form-control" ng-model="user.rusername" placeholder="Name" required>
     </div>
   </div>
   <div class="form-group">
     <label class="col-sm-2 control-label">Password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" ng-model="userspass" placeholder="Password" required>
+      <input type="password" class="form-control" ng-model="user.rpassword" placeholder="Password" required>
     </div>
   </div>
   <div class="form-group">
     <label class="col-sm-2 control-label">Retype-Password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" ng-model="usersrpass" placeholder="Password" required>
+      <input type="password" class="form-control" ng-model="user.rrpassword" placeholder="Password" required>
     </div>
   </div>
   <div class="form-group">
