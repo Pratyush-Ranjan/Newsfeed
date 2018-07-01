@@ -2,12 +2,60 @@
 <html ng-app="news">
 <head>
 	<title>NEWs POST</title>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="./public/stylesheets/bootstrap.min.css">
 	<script type="text/javascript" src="./public/javascripts/angular.min.js"></script>
 	<script type="text/javascript" src="./public/javascripts/angular-route.min.js"></script>
 	<script type="text/javascript" src="./public/javascripts/underscore-min.js"></script>
 <script type="text/javascript" src="./public/javascripts/angularapp.js"></script>
+<script type="text/javascript">
+  function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+</script>
 <style>
+.topnav {
+    background-color: #f2f2f2;
+    overflow: hidden;
+}
+.topnav a {
+    float: left;
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 0px 16px;
+    text-decoration: none;
+}
+.topnav .icon {
+    display: none;
+}
+
+@media screen and (max-width: 600px) {
+  .topnav a:not(:first-child) {display: none;}
+  .topnav a.icon {
+    float: right;
+    display: block;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .topnav.responsive {position: relative;}
+  .topnav.responsive a.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .topnav.responsive a {
+    float: none;
+    display: block;
+    text-align: left;
+  }
+}
   @media screen and (max-width: 1100px)
   {
     .v1
@@ -20,24 +68,17 @@
 <body ng-controller="newscontrol">
 <div class="row">
     <div class="col-xs-8 col-xs-offset-2">
-      <br>
-      <% if (locals.usernew) { %>
-  <ul class="nav nav-pills" style="float: right;" ng-show="sign()">
-     <li><a style="color: lightblue;" href="#/post" ><h3> Dashboard </h3></a></li>
-     <li><a style="color: lightblue;" href="" ng-click="logout()" ><h3> LogOut </h3></a></li>
-   </ul>
-<% } else { %>
-  <h1>Boohiss no myVar!</h1>
-<% } %></h1>
-     <h1 style="color: grey; ">Global BABA News {{ userData.email }} </h1>
-     <% if(locals.error_msg){ %>
-<h1> yes</h1>
-<% } else{ %>
-<h1> no <%= locals.error_msg %> </h1>
-<% } %>
-     <hr>
+<div class="topnav" id="myTopnav">
+  <a href="" ><h3 >BABA News</h3></a>
+  <a ng-show="isLoggedIn()" style="float: right;" href="" ng-click="logOut()" ><h4>LogOut</h4></a>
+     <a ng-show="isLoggedIn()" style="float: right;" href="#/post" ><h4>Dashboard</h4></a>
+  <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+    <i class="fa fa-bars"></i>
+  </a>
+</div>
+<hr>
       <div class="ng-view"></div>
-    </div>
+      </div>
   </div>
 </body>
 </html>

@@ -1,91 +1,140 @@
 var app=angular.module('news',['ngRoute']);
+
 app.config(function($routeProvider){
 $routeProvider
 	.when("/",{
 		templateUrl:"./views/user.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['$location', 'auth',
+		function($location, auth) {
+			if (auth.isLoggedIn()) {
+				$location.path('/post');
+			}
+		}]
 	})
 	.when("/post",{
 		templateUrl:"./views/post.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['$location', 'auth',
+		function($location, auth) {
+			if (!auth.isLoggedIn()) {
+				$location.path('/');
+			}
+		}]
 	})
 	.when("/comment/:id",{
 		templateUrl: "./views/comment.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['$location', 'auth',
+		function($location, auth) {
+			if (!auth.isLoggedIn()) {
+				$location.path('/');
+			}
+		}]
 	})
 	.otherwise({
 		redirectTo: "/"
 	})
 });
-app.controller('newscontrol',['$scope','$routeParams','$http','$location',function($scope,$routeParams,$http,$location){
-$scope.posts=[];
-$scope.userData=['hmm'];
-$scope.users=[];
-$scope.er='';
-$scope.n=0;
-$scope.sign=function(){
-	if($scope.n==0)
-		return false;
-	else 
-		return true;
-}
 
-$scope.singup=function(){
-if($scope.userspass===$scope.usersrpass)
-{
-	if($scope.userspass.length > 6)
-	{
-	$scope.er='';
-	 $scope.userdata=({
-	 	username: $scope.usersname,
-    email: $scope.usersemail,
-    password: $scope.userspass
-  });
-	 $scope.n=1;
-$http.post('/api/adduser', $scope.userdata)
-		.success(function(){
+
+app.factory('auth', ['$http', '$window','$location',
+function($http, $window, $location) {
+	var auth = {};
+
+	auth.saveToken = function(token) {
+		$window.localStorage['globalbaba-news-token'] = token;
+	};
+
+	auth.getToken = function() {
+		return $window.localStorage['globalbaba-news-token'];
+	}
+
+	auth.isLoggedIn = function() {
+		var token = auth.getToken();
+
+		if (token) {
+			var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+			return payload.exp > Date.now() / 1000;
+		} else {
+			return false;
+		}
+	};
+
+	auth.currentUser = function() {
+		if (auth.isLoggedIn()) {
+			var token = auth.getToken();
+			var payload = JSON.parse($window.atob(token.split('.')[1]));
+
+			return payload.username;
+		}
+	};
+
+	auth.register = function(user) {
+		return $http.post('/register', user).success(function(data) {
+			auth.saveToken(data.token);
+		});
+	};
+
+	auth.logIn = function(user) {
+		return $http.post('/login', user).success(function(data) {
+			auth.saveToken(data.token);
+		});
+	};
+
+	auth.logOut = function() {
+		$window.localStorage.removeItem('globalbaba-news-token');
+		$location.path('/');
+	};
+
+	return auth;
+}]);
+app.controller('newscontrol',['$scope','$routeParams','$http','$location','auth',function($scope,$routeParams,$http,$location,auth){
+$scope.posts=[];
+$scope.er='';
+
+$scope.user = {};
+$scope.isLoggedIn = auth.isLoggedIn;
+$scope.currentUser = auth.currentUser;
+
+	$scope.register = function() {
+		$scope.n=0;
+		if($scope.user.rpassword===$scope.user.rrpassword)
+		{
+			if($scope.user.rpassword.length > 6)
+			{
+				$http.get('/register/check',$scope.user)
+		.success(function(data) {
+			$scope.er='Username already taken';
+			$scope.n=1;
+		});
+		if($scope.n!=1)
+			$scope.er='';
+				auth.register($scope.user).error(function(error) {
+				$scope.err = error;
+				}).then(function() {
+				$location.path('/post');
+				});
+				
+			} 
+			else
+				$scope.er='Password is weak';
+		}
+		else
+			$scope.er='Password is not same';
+	};
+
+	$scope.logIn = function() {
+		auth.logIn($scope.user).error(function(error) {
+			$scope.error = error;
+		}).then(function() {
 			$location.path('/post');
-		})
-		.error(function(data) {
-			console.log('Error: ' + data);
-		});
-	}
-	else
-	{
-$scope.er='Password is weak';
-return ;
-	}
-}
-else
-{
-	$scope.er='Password is not same';
-return ;
-}
-};
-$scope.signin = function(){
-	$http({
-        method:"post",
-        url:'/api/login',
-        data:{username:$scope.useremail,password:$scope.password},
-    }).success(function(database) {
-    	angular.copy(database,$scope.userData);
-    	$scope.n=1;
-    	$location.path('/post');
-      })
-      .error(function(data) {
-			console.log('Error: ' + data);
 		});
 	};
-$scope.logout= function(){
-	$scope.n=0;
-	$http.get('/api/logout')
-		.success(function(){
-			$location.path('/');
-		})
-		.error(function(data) {
-			console.log('Error: ' + data);
-		});
-	};
+
+$scope.logOut= auth.logOut;
+
 /* getting all data from mongo database*/
 $http.get('/api/news')
 		.success(function(data) {
@@ -134,7 +183,7 @@ if($routeParams.id)
  		 if($scope.body === '') { return; }
  		 $scope.cnt=({
    		 bodypart: $scope.body,
-   		 author: 'user',
+   		 author: auth.currentUser(),
    		 upvotes: 0
  		 });
  		 $http.post('/api/addcomments/'+$scope.rp,$scope.cnt)
