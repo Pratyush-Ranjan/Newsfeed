@@ -3,89 +3,102 @@ app.config(function($routeProvider){
 $routeProvider
 	.when("/",{
 		templateUrl:"./views/user.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['auth',
+		function(auth) {
+			auth.isloggedin();
+		}]
 	})
 	.when("/post",{
 		templateUrl:"./views/post.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['auth',
+		function(auth) {
+			auth.checklogin();
+		}]
 	})
 	.when("/comment/:id",{
 		templateUrl: "./views/comment.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['auth',
+		function(auth) {
+			auth.checklogin();
+		}]
 	})
 	.otherwise({
 		redirectTo: "/"
 	})
 });
-app.controller('newscontrol',['$scope','$routeParams','$http','$location',function($scope,$routeParams,$http,$location){
+app.factory('auth', ['$http','$location', '$rootScope',
+function($http, $location, $rootScope) {
+	var auth = {};
+auth.checklogin = function() {
+	$http.get('/loggedin')
+	.success(function(response)
+ 	{ 
+ 	if (response === '0') 
+ 	   { $location.path("/"); 
+ 		} 
+ 	else
+ 	{
+ 		$rootScope.currentUser = response;
+ 	}
+ 		});
+ }; 
+ auth.isloggedin = function() {
+	$http.get('/loggedin')
+	.success(function(response)
+ 	{ 
+ 	if (response !== '0') 
+ 	   {  $rootScope.currentUser = response;
+ 	   	  $location.path("/post"); 
+ 		} 
+ 		});
+ }; 
+	return auth;
+}]);
+app.controller('newscontrol',['$scope','$routeParams','$http','$location','$rootScope',function($scope,$routeParams,$http,$location,$rootScope){
 $scope.posts=[];
-$scope.userData=['hmm'];
-$scope.users=[];
+$scope.user={};
 $scope.er='';
-$scope.n=0;
-$scope.sign=function(){
-	if($scope.n==0)
-		return false;
-	else 
-		return true;
-}
-
-$scope.singup=function(){
-if($scope.userspass===$scope.usersrpass)
-{
-	if($scope.userspass.length > 6)
-	{
-	$scope.er='';
-	 $scope.userdata=({
-	 	username: $scope.usersname,
-    email: $scope.usersemail,
-    password: $scope.userspass
-  });
-	 $scope.n=1;
-$http.post('/api/adduser', $scope.userdata)
-		.success(function(){
-			$location.path('/post');
-		})
-		.error(function(data) {
-			console.log('Error: ' + data);
-		});
-	}
-	else
-	{
-$scope.er='Password is weak';
-return ;
-	}
-}
-else
-{
-	$scope.er='Password is not same';
-return ;
-}
-};
-$scope.signin = function(){
-	$http({
-        method:"post",
-        url:'/api/login',
-        data:{username:$scope.useremail,password:$scope.password},
-    }).success(function(database) {
-    	angular.copy(database,$scope.userData);
-    	$scope.n=1;
-    	$location.path('/post');
-      })
-      .error(function(data) {
-			console.log('Error: ' + data);
-		});
+$scope.register = function() {
+		if($scope.user.rpassword===$scope.user.rrpassword)
+		{
+			if($scope.user.rpassword.length > 6)
+			{
+				$scope.er='';
+				$http.post('/register', $scope.user)
+				.error(function(error) {
+				$scope.er = 'username already taken';
+				})
+        		.success(function(response) {
+          		$rootScope.currentUser = response;
+          		$location.path("/post");
+       			 });
+			} 
+			else
+				$scope.er='Password is weak';
+		}
+		else
+			$scope.er='Password is not same';
 	};
-$scope.logout= function(){
-	$scope.n=0;
-	$http.get('/api/logout')
-		.success(function(){
-			$location.path('/');
+$scope.logIn = function() {
+    $http.post('/login', $scope.user)
+    .error(function(error) {
+			$scope.errorlogin='Invalid credentials';
 		})
-		.error(function(data) {
-			console.log('Error: ' + data);
-		});
-	};
+      .success(function(response) {
+        $rootScope.currentUser = response;
+        $location.path("/post");
+      });
+  };
+	$scope.logout = function() {
+    $http.post("/logout")
+      .success(function() {
+        $rootScope.currentUser = null;
+        $location.path("/");
+      });
+  };
 /* getting all data from mongo database*/
 $http.get('/api/news')
 		.success(function(data) {
@@ -134,7 +147,7 @@ if($routeParams.id)
  		 if($scope.body === '') { return; }
  		 $scope.cnt=({
    		 bodypart: $scope.body,
-   		 author: 'user',
+   		 author: $rootScope.currentUser.username,
    		 upvotes: 0
  		 });
  		 $http.post('/api/addcomments/'+$scope.rp,$scope.cnt)
