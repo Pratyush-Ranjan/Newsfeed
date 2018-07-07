@@ -1,13 +1,15 @@
 var express = require('express');
 var router = express.Router();
-var passport =require('passport');
-var LocalStrategy =require('passport-local').Strategy
+var passport = require('passport');
+require('../config/pass')(passport);
 var New= require('../models/new');
 var User= require('../models/user');
 
-router.use(passport.initialize());
+/* GET home page. */
+router.get('/', function(req, res, next) {
+res.render('index', { title: 'Global Baba News' });
+});
 
-router.use(passport.session());
 
 router.get('/api/news', function(req, res, next) {
   New.find(function(err,docs){
@@ -16,69 +18,6 @@ router.get('/api/news', function(req, res, next) {
 	else
 		res.json(docs);
 	});
-});
-
-router.post('/api/adduser', function(req, res, next) {
-  var usernew= new User({
-    uname: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  });
-  User.createuser(usernew,function(err,user){
-    if(err) res.send(err);
-  });
-  console.log('chal');
-  res.redirect('http://localhost:3000/#/post');
-  console.log('na');
-});
-
-passport.serializeUser(function(user,done){
-   done(null,user.id); 
-});
-passport.deserializeUser(function(id,done){
-    User.getUserById(id,function(err,user){
-        done(err,user);
-    });
-    
-});
-
-passport.use(new LocalStrategy(function(username,password,done){
-    console.log("here"+username+password);
-    User.findOne({ email: username },function(err,user){
-        if(err) console.log(err);
-        if(!user){
-            console.log('Unknown User');
-            return done(null,false,{error_msg:'Unknown User'});
-        }
-        User.comparePassword(password,user.password,function(err,isMatch){
-            console.log(user.password);
-            if(err) console.log(err);
-            if(isMatch){
-              console.log('success' + user);
-                return done(null,user);
-            }else{
-                console.log('invalid Password');
-                return done(null,false,{error_msg:'Invalid Password'});
-            }
-        });
-    });
-}));
-
-router.post('/api/login', passport.authenticate('local') ,function(req, res,next) {
-  console.log('aao raja'+ req.user.email);
-  usernew=req.user;
-  var usernew= new User({
-    uname: req.user.username,
-    email: req.user.email,
-    password: req.user.password
-  });
-  console.log(usernew);
-  res.send(usernew);
-    });
-
-router.get('/api/logout', function(req,res){
-    req.logout();
-    res.redirect('http://localhost:3000/#/');
 });
 
 router.post('/api/addnews', function(req, res, next) {
@@ -147,9 +86,38 @@ router.get('/api/news/:id', function(req, res, next) {
 	});
 });
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-res.render('index', { title: 'Global Baba News' });
+router.post('/login', function(req, res, next){
+console.log('calling passport)');
+  passport.authenticate('local-login', function(err, user){
+    if(err){ return next(err); }
+req.logIn(user, function(err) {
+      if (err) { return next(err); }
+      return res.json(user);
+       });
+  })(req, res, next);
 });
+
+    // handle logout
+    router.post("/logout", function(req, res) {
+      req.logOut();
+      res.send(200);
+    })
+
+    // loggedin
+    router.get("/loggedin", function(req, res) {
+      res.send(req.isAuthenticated() ? req.user : '0');
+    });
+
+router.post("/register", function(req, res, next) {
+          var user = new User();
+          user.username = req.body.rusername;
+          user.password = user.generateHash(req.body.rpassword);
+          user.save(function(err, user) {
+            req.logIn(user, function(err) {
+              if (err) { return next(err); }
+              res.json(user);
+            });
+          });
+  });
 
 module.exports = router;
