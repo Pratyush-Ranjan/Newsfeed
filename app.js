@@ -11,7 +11,7 @@ var app = express();
 var news= require('./models/new');
 require('./models/user');
 // connect MongoDB
-mongoose.connect('mongodb://localhost/globalbaba', function(err,db){
+mongoose.connect('mongodb://admin:Pratyush@1999@ds259111.mlab.com:59111/global-baba-new', function(err,db){
     if (!err){
         console.log('Connected to /news!');
     } else{
