@@ -11,7 +11,11 @@ $routeProvider
 	})
 	.when("/post",{
 		templateUrl:"./views/post.ejs",
-		controller: "newscontrol"
+		controller: "newscontrol",
+		resolve : ['auth',
+		function(auth) {
+			auth.checklogin();
+		}]
 	})
 	.when("/comment/:id",{
 		templateUrl: "./views/comment.ejs",
