@@ -1,2 +1,2 @@
 # Newsfeed
-It is a small MEAN stack project of news app.
+It's a MEAN stack project of news app.
