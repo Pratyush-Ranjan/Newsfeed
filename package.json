@@ -19,7 +19,7 @@
     "express-session": "^1.15.6",
     "express-validator": "^5.2.0",
     "http-errors": "~1.6.2",
-    "mongoose": "^5.1.4",
+    "mongoose": "^5.7.5",
     "mongose": "0.0.2-security",
     "morgan": "~1.9.0",
     "nodemon": "^1.17.5",
